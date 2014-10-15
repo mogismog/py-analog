@@ -2,10 +2,7 @@
 
 import warnings
 
-import numpy as np
-
 from utils import find_nearest_idx
-
 from comp_funcs import *
 
 class Analog(object):
@@ -70,39 +67,18 @@ class Analog(object):
         self.all_lats = np.arange(lat_bounds[0], lat_bounds[-1] + 1, lat_inc)
         self.all_lons = np.arange(lon_bounds[0], lon_bounds[-1] + 1, lon_inc)
 
-        if self.n_vars == 1:
-            if self.all_lats.shape[0] != self.train.shape[0]:
-                 raise ValueError("Number of latitude grid points from domain boundaries doesn't equal that in training data.")
-            if self.all_lons.shape[0] != self.train.shape[1]:
-                 raise ValueError("Number of longitude grid points from domain boundaries doesn't equal that in training data.")
-
-            if self.all_lats.shape[0] != self.forecast.shape[0]:
-                 raise ValueError("Number of latitude grid points from domain boundaries doesn't equal that in forecast data.")
-            if self.all_lons.shape[0] != self.forecast.shape[1]:
-                 raise ValueError("Number of longitude grid points from domain boundaries doesn't equal that in forecast data.")
-        else:
-            if self.all_lats.shape[0] != self.train.shape[-2]:
-                 raise ValueError("Number of latitude grid points from domain boundaries doesn't equal that in training data.")
-            if self.all_lons.shape[0] != self.train.shape[-1]:
-                 raise ValueError("Number of longitude grid points from domain boundaries doesn't equal that in training data.")
-
-            if self.all_lats.shape[0] != self.forecast.shape[-2]:
-                 raise ValueError("Number of latitude grid points from domain boundaries doesn't equal that in forecast data.")
-            if self.all_lons.shape[0] != self.forecast.shape[-1]:
-                 raise ValueError("Number of longitude grid points from domain boundaries doesn't equal that in forecast data.")
-
         # --- If we're dealing with a point forecast, we will find the closest lat/lon grid points to the fcst point.
-        if len(forecast_lats) > 1:
-            self.closest_lat = self.all_lats[find_nearest_idx(self.all_lats[:], self.forecast_lats[0])[0]]
-            self.closest_lon = self.all_lons[find_nearest_idx(self.all_lons[:], self.forecast_lons[0])[0]]
+        if len(forecast_lats) < 1:
+            self.closest_lat = self.all_lats[find_nearest_idx(self.all_lats[:], forecast_lats[0])]
+            self.closest_lon = self.all_lons[find_nearest_idx(self.all_lons[:], forecast_lons[0])]
         # --- If not, we want to find a starting/stopping lat/lon indices to generate a domain-based forecast
         else:
             self.forecast_lats = forecast_lats
             self.forecast_lons = forecast_lons
-            self.start_lat_idx = np.where(forecast_lats[0] == all_lats)[0]
-            self.start_lon_idx = np.where(forecast_lons[0] == all_lons)[0]
-            self.stop_lat_idx = np.where(forecast_lats[1] == all_lats)[0]
-            self.stop_lon_idx = np.where(forecast_lons[1] == all_lons)[0]
+            self.start_lat_idx = np.where(forecast_lats[0] == self.all_lats)[0]
+            self.start_lon_idx = np.where(forecast_lons[0] == self.all_lons)[0]
+            self.stop_lat_idx = np.where(forecast_lats[1] == self.all_lats)[0]
+            self.stop_lon_idx = np.where(forecast_lons[1] == self.all_lons)[0]
 
         # --- Great, it passed! Let's add in some more info for our own edification
         self.lat_bounds = lat_bounds
@@ -112,13 +88,23 @@ class Analog(object):
 
 
     def __repr__(self):
-        return "<Analog(grid_window={}, comp_method={}, field_weights={},lat_bounds={}, lon_bounds={}, forecast_lats={}, forecast_lons={}, lat_inc={}, lon_inc={})>".format(
+        try:
+            self.forecast_lats
+        except:
+            pass
+        else:
+            return "<Analog(grid_window={}, comp_method={}, field_weights={},lat_bounds={}, lon_bounds={}, forecast_lats={}, forecast_lons={}, lat_inc={}, lon_inc={})>".format(
                              self.grid_window,self.comp_method, self.field_weights, self.lat_bounds,
                              self.lon_bounds, self.forecast_lats, self.forecast_lons, self.lat_inc, self.lon_inc)
 
 
     def __str__(self):
-        return "Analog(grid_window={}, comp_method={}, field_weights={},lat_bounds={}, lon_bounds={}, forecast_lats={}, forecast_lons={}, lat_inc={}, lon_inc={})".format(
+        try:
+            self.forecast_lats
+        except:
+            pass
+        else:
+            return "Analog(grid_window={}, comp_method={}, field_weights={},lat_bounds={}, lon_bounds={}, forecast_lats={}, forecast_lons={}, lat_inc={}, lon_inc={})".format(
                              self.grid_window,self.comp_method, self.field_weights, self.lat_bounds,
                              self.lon_bounds, self.forecast_lats, self.forecast_lons, self.lat_inc, self.lon_inc)
 
@@ -147,6 +133,27 @@ class Analog(object):
                 raise ValueError("More methods than variables!")
         else:
             self.n_vars = 1
+
+        if self.n_vars == 1:
+            if self.all_lats.shape[0] != train.shape[0]:
+                 raise ValueError("Number of latitude grid points from domain boundaries doesn't equal that in training data.")
+            if self.all_lons.shape[0] != train.shape[1]:
+                 raise ValueError("Number of longitude grid points from domain boundaries doesn't equal that in training data.")
+
+            if self.all_lats.shape[0] != forecast.shape[0]:
+                 raise ValueError("Number of latitude grid points from domain boundaries doesn't equal that in forecast data.")
+            if self.all_lons.shape[0] != forecast.shape[1]:
+                 raise ValueError("Number of longitude grid points from domain boundaries doesn't equal that in forecast data.")
+        else:
+            if self.all_lats.shape[0] != train.shape[-2]:
+                 raise ValueError("Number of latitude grid points from domain boundaries doesn't equal that in training data.")
+            if self.all_lons.shape[0] != train.shape[-1]:
+                 raise ValueError("Number of longitude grid points from domain boundaries doesn't equal that in training data.")
+
+            if self.all_lats.shape[0] != forecast.shape[-2]:
+                 raise ValueError("Number of latitude grid points from domain boundaries doesn't equal that in forecast data.")
+            if self.all_lons.shape[0] != forecast.shape[-1]:
+                 raise ValueError("Number of longitude grid points from domain boundaries doesn't equal that in forecast data.")
 
         # --- Set up the class attributes
         self.forecast = forecast

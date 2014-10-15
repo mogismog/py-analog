@@ -1,7 +1,11 @@
-#!/usr/bin/env python
-
+import numpy as np
 from datetime import datetime,timedelta
 import itertools
+
+def find_nearest_idx(array,value):
+    idx = (np.abs(array-value)).argmin(axis=0)
+    return idx
+
 
 def get_1mo_dates(inyr,inmo,indate,byear,eyear):
     """
@@ -16,7 +20,6 @@ def get_1mo_dates(inyr,inmo,indate,byear,eyear):
  indate - Initial date (1,31)
  inyr - Initial year, YYYY (1985 - )
  inmo - Initial month, (1,12)
- window - range of dates in past years to search, e.g. 45 will find dates 45 days before/after indate
 
  Returns:
  outdates - List of dates meeting the criteria
