@@ -108,33 +108,34 @@ class Analog(object):
                              self.grid_window,self.comp_method, self.field_weights, self.lat_bounds,
                              self.lon_bounds, self.forecast_lats, self.forecast_lons, self.lat_inc, self.lon_inc)
 
-    def analog_data(self,train,forecast):
 
+    def find_analogs(self, train, forecast):
         """
-        Initialize the training and forecast data with which to find analogs.
-
+        Used to find analogs for a single forecast domain.
         :param forecast:
             NumPy array, Either a 2-d (lat,lon) or 3-d (n_vars,lat,lon) numpy array of "current" forecast data.
         :param train:
             NumPy array, Either a 3-d (time,lat,lon) or 4-d (n_vars,time,lat,lon) numpy array of "past"/training data.
-        :return: self
+        :return analog_idxs:
+            NumPy array, indices of closest analogs, from best pattern match to worst. Same shape as train array.
         """
+
         # --- Here, we check to make sure everything is copacetic between the forecast/train array shapes
         # --- and other pre-defined variables
         if (len(forecast.shape) > 2) and (forecast.shape[0] > 1):
-            self.n_vars = forecast.shape[0]
+            n_vars = forecast.shape[0]
             # --- First, make sure we're dealing with same number of vars between fcst/train
             if forecast.shape[0] != train.shape[0]:
                 raise ValueError("Different number of variables between forecast and training data arrays!")
             # --- Make sure there aren't more field_weights than variables
-            if len(field_weights) > self.forecast.shape[0]:
+            if len(self.field_weights) > forecast.shape[0]:
                 raise ValueError("More field_weights than variables!")
-            if len(comp_method) > self.forecast.shape[0]:
+            if len(self.comp_method) > forecast.shape[0]:
                 raise ValueError("More methods than variables!")
         else:
-            self.n_vars = 1
+            n_vars = 1
 
-        if self.n_vars == 1:
+        if n_vars == 1:
             if self.all_lats.shape[0] != train.shape[0]:
                  raise ValueError("Number of latitude grid points from domain boundaries doesn't equal that in training data.")
             if self.all_lons.shape[0] != train.shape[1]:
@@ -155,30 +156,14 @@ class Analog(object):
             if self.all_lons.shape[0] != forecast.shape[-1]:
                  raise ValueError("Number of longitude grid points from domain boundaries doesn't equal that in forecast data.")
 
-        # --- Set up the class attributes
-        self.forecast = forecast
-        self.train = train
-
-
-    def find_analogs(self):
-        """
-        Used to find analogs for a single forecast domain.
-
-        :return analog_idxs:
-            NumPy array, indices of closest analogs, from best pattern match to worst.
-        """
 
         # --- Pre-generating analog indices array, this should be faster.
-        if len(self.fcstLats) <= 1:
-            analog_idxs = np.ones(self.train.shape[0]) * -9999.9
-        else:
-            # --- Make analog indices array first, then fill it in
-            analog_idxs = np.ones(self.train.shape) * -9999.9
+        analog_idxs = np.ones(train.shape[0]) * -9999.9
 
         # --- Now, let's find the closest analogs
-        if self.n_vars == 1: # --- Only doing a single field
+        if n_vars == 1: # --- Only doing a single field
             if self.comp_method[0] == 'rank':
-                _rank_analog_grid(self.train,self.forecast,analog_idxs,self.start_lat_idx,self.stop_lat_idx,
+                _rank_analog_grid(train,forecast,analog_idxs,self.start_lat_idx,self.stop_lat_idx,
                                   self.start_lon_idx,self.stop_lon_idx, self.grid_window)
             elif self.comp_method[0] == 'rmse':
                 _rmse_analog_grid(self.train,self.forecast,analog_idxs,self.start_lat_idx,self.stop_lat_idx,
@@ -186,16 +171,16 @@ class Analog(object):
             elif self.comp_method[0] == 'mae':
                 _mae_analog_grid(self.train,self.forecast,analog_idxs,self.start_lat_idx,self.stop_lat_idx,
                                   self.start_lon_idx,self.stop_lon_idx, self.grid_window)
-        elif self.n_vars > 1:
+        elif n_vars > 1:
             for meth, nvar in enumerate(self.comp_method):
                 if meth == 'rank':
-                    _rank_analog_grid(self.train[nvar,...],self.forecast[nvar,...],analog_idxs[nvar,...],self.start_lat_idx,self.stop_lat_idx,
+                    _rank_analog_grid(train[nvar,...],forecast[nvar,...],analog_idxs[nvar,...],self.start_lat_idx,self.stop_lat_idx,
                                       self.start_lon_idx,self.stop_lon_idx, self.grid_window)
                 elif meth == 'rmse':
-                    _rmse_analog_grid(self.train[nvar,...],self.forecast[nvar,...],analog_idxs[nvar,...],self.start_lat_idx,self.stop_lat_idx,
+                    _rmse_analog_grid(train[nvar,...],forecast[nvar,...],analog_idxs[nvar,...],self.start_lat_idx,self.stop_lat_idx,
                                       self.start_lon_idx,self.stop_lon_idx, self.grid_window)
                 elif meth == 'mae':
-                    _mae_analog_grid(self.train[nvar,...],self.forecast[nvar,...],analog_idxs[nvar,...],self.start_lat_idx,self.stop_lat_idx,
+                    _mae_analog_grid(train[nvar,...],forecast[nvar,...],analog_idxs[nvar,...],self.start_lat_idx,self.stop_lat_idx,
                                       self.start_lon_idx,self.stop_lon_idx, self.grid_window)
 
                 # --- Now, we add weights to the distances...
@@ -205,5 +190,6 @@ class Analog(object):
             analog_idxs = np.sum(analog_idxs,axis=0)
 
         # --- now find indices of closest ranks
-        self.analogs = argsort_analogs(analog_idxs,elf.start_lat_idx,self.stop_lat_idx,
+        analog_idxs = argsort_analogs(analog_idxs,elf.start_lat_idx,self.stop_lat_idx,
                                       self.start_lon_idx,self.stop_lon_idx)
+        return analog_idxs
