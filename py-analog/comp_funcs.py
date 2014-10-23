@@ -28,7 +28,7 @@ def _rank_analog_grid(train,forecast,out_array,i_start,i_stop,j_start,j_stop, gr
             #temp_array[:,:] = in_array[:,i-grid_window:i+grid_window+1,j-grid_window:j+grid_window+1].reshape(temp_array.shape)
             out_array[:,i,j] = (np.sum(ranked_array[:-1,i-grid_window:i+grid_window+1,j-grid_window:j+grid_window+1].reshape(shp1)
                                       -ranked_array[-1,i-grid_window:i+grid_window+1,j-grid_window:j+grid_window+1].reshape(shp2),
-                                      axis=1,dtype=np.int))
+                                      axis=1))
     return out_array
 
 
@@ -47,7 +47,7 @@ def _rmse_analog_grid(train,forecast,out_array,i_start,i_stop,j_start,j_stop, gr
         for j in range(j_start,j_stop+1,1): # --- longitudes
             out_array[:,i,j] = (np.sqrt(np.mean((train[:,i-grid_window:i+grid_window+1,j-grid_window:j+grid_window+1].reshape(shp1)
                                       -forecast[i-grid_window:i+grid_window+1,j-grid_window:j+grid_window+1].reshape(shp2))**2,
-                                      axis=1,dtype=np.float),dtype=np.float))
+                                      axis=1,dtype=np.float)))
     return out_array
 
 @autojit
@@ -65,7 +65,7 @@ def _mae_analog_grid(train,forecast,out_array,i_start,i_stop,j_start,j_stop, gri
         for j in range(j_start,j_stop+1,1): # --- longitudes
             out_array[:,i,j] = (np.mean(np.abs(train[:,i-grid_window:i+grid_window+1,j-grid_window:j+grid_window+1].reshape(shp1)
                                       -forecast[i-grid_window:i+grid_window+1,j-grid_window:j+grid_window+1].reshape(shp2)),
-                                      axis=1,dtype=np.float))
+                                      axis=1))
     return out_array
 
 @autojit
