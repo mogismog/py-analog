@@ -1,13 +1,14 @@
 import numpy as np
-from datetime import datetime,timedelta
+from datetime import datetime, timedelta
 import itertools
 
-def find_nearest_idx(array,value):
-    idx = (np.abs(array-value)).argmin(axis=0)
+
+def find_nearest_idx(array, value):
+    idx = (np.abs(array - value)).argmin(axis=0)
     return idx
 
 
-def get_1mo_dates(inyr,inmo,indate,byear,eyear):
+def get_1mo_dates(inyr, inmo, indate, byear, eyear):
     """
  Used with netCDF4 files and py-netCDF.
 
@@ -27,40 +28,41 @@ def get_1mo_dates(inyr,inmo,indate,byear,eyear):
 
     fnlist = []
 
-    #print inmo,indate
+    # print inmo,indate
     try:
-        xdate = datetime(byear,inmo,indate)
+        xdate = datetime(byear, inmo, indate)
     except ValueError:
-        xdate = datetime(byear,inmo,indate-1)
+        xdate = datetime(byear, inmo, indate - 1)
     else:
-        xdate = datetime(byear,inmo,indate)
-    while xdate < datetime(eyear+1,1,1):
-        #print xdate
+        xdate = datetime(byear, inmo, indate)
+    while xdate < datetime(eyear + 1, 1, 1):
+        # print xdate
         if xdate.year == inyr:
             try:
-                xdate = datetime((xdate.year + 1),inmo,indate)
+                xdate = datetime((xdate.year + 1), inmo, indate)
             except ValueError:
-                xdate = datetime((xdate.year + 1),inmo,indate-1)
+                xdate = datetime((xdate.year + 1), inmo, indate - 1)
             continue
-        for datechange in xrange(0,35):
-                tdelta = timedelta(days=datechange)
-                analogdate = xdate + tdelta
-                #print analogdate,xdate
-                if analogdate.year > eyear:
-                    continue
-                if analogdate.year == inyr:
-                    continue
-                if analogdate.month != xdate.month:
-                    continue
-                fnlist.append(analogdate)
+        for datechange in xrange(0, 35):
+            tdelta = timedelta(days=datechange)
+            analogdate = xdate + tdelta
+            # print analogdate,xdate
+            if analogdate.year > eyear:
+                continue
+            if analogdate.year == inyr:
+                continue
+            if analogdate.month != xdate.month:
+                continue
+            fnlist.append(analogdate)
         try:
-            xdate = datetime((xdate.year + 1),inmo,indate)
+            xdate = datetime((xdate.year + 1), inmo, indate)
         except ValueError:
-            xdate = datetime(xdate.year+1,inmo,indate-1)
+            xdate = datetime(xdate.year + 1, inmo, indate - 1)
 
     return fnlist
 
-def get_analog_dates(forecastDate,window,byear,eyear, bias_corr=False, month_range=True, **kwargs):
+
+def get_analog_dates(forecastDate,window,byear,eyear, all_dates=False, month_range=True,):
     """
  Very useful with netCDF4 files and py-netCDF.
 
@@ -79,20 +81,30 @@ inputs:
  eyear - latest year for potential dates (eyear/12/31)
 
 Optional arguments:
- bias_corr - If True, data is assumed to be bias-corrected and supplemental dates (in seasonally-similar time frames)\n
-    will be used
+ all_dates - If True, data is assumed to be bias-corrected and all *possible* dates (while still taking into account
+    cross validation rules) will be used. If true, month_range is ignored.
  month_range - If True, window will be n months before/after fcst month instead of n days before/after fcst date.
+    Ignored if all_dates = True
+
 
 Returns:
  outdates - List of dates meeting the criteria
     """
 
-    bias_corr = bias_corr
-    month_range = month_range
-
-
     fnlist = []
-    date_list = []
+
+    # --- Here, since we are now using bias-corrected data, we can get additional potential analog dates!
+    if all_dates:
+        xdate = datetime(byear,1,1)
+
+        while xdate <= datetime(eyear,12,31):
+            if xdate.year != forecastDate.year: # --- cross validation
+                if np.abs((xdate-forecastDate).days) > 31: # --- more CV, don't want dates too close together
+
+                    fnlist.append(xdate)
+            xdate += timedelta(days=1)
+
+        return fnlist
 
     if month_range:
         try:
@@ -200,31 +212,3 @@ Returns:
             except ValueError: # --- 2/29 on non-leap year issue
                 xdate = datetime(xdate.year+1,forecastDate.month,forecastDate.date-1)
 
-    # --- Here, since we are now using bias-corrected data, we can get additional potential analog dates!
-    if bias_corr:
-
-        date_list.append(fnlist)
-
-        if (forecastDate.month < 2) or (forecastDate.month > 9):
-           date_list.append(get_1mo_dates(int(forecastDate.year),3,1,byear,eyear))
-           date_list.append(get_1mo_dates(int(forecastDate.year),4,1,byear,eyear))
-           date_list.append(get_1mo_dates(int(forecastDate.year),5,1,byear,eyear))
-        if (forecastDate.month == 2):
-           date_list.append(get_1mo_dates(int(forecastDate.year),4,1,byear,eyear))
-           date_list.append(get_1mo_dates(int(forecastDate.year),5,1,byear,eyear))
-           date_list.append(get_1mo_dates(int(forecastDate.year),10,1,byear,eyear))
-           date_list.append(get_1mo_dates(int(forecastDate.year),11,1,byear,eyear))
-        if (forecastDate.month == 3):
-           date_list.append(get_1mo_dates(int(forecastDate.year),5,1,byear,eyear))
-           date_list.append(get_1mo_dates(int(forecastDate.year),10,1,byear,eyear))
-           date_list.append(get_1mo_dates(int(forecastDate.year),11,1,byear,eyear))
-        if (forecastDate.month == 4):
-           date_list.append(get_1mo_dates(int(forecastDate.year),9,1,byear,eyear))
-           date_list.append(get_1mo_dates(int(forecastDate.year),10,1,byear,eyear))
-           date_list.append(get_1mo_dates(int(forecastDate.year),11,1,byear,eyear))
-
-        # --- Now flatten and return the list
-        date_list = list(itertools.chain.from_iterable(date_list))
-        return date_list
-    else:
-        return fnlist
