@@ -9,8 +9,7 @@ class Analog(object):
     """Various methods to produce a single deterministic/probabilistic forecast via analog method."""
 
     def __init__(self,grid_window=3, comp_method=['Rank'], field_weights=[],
-                 lat_bounds=[], lon_bounds=[], forecast_lats=[], forecast_lons=[], lat_inc=1., lon_inc=1.,
-                 forecast_dates=[]):
+                 lat_bounds=[], lon_bounds=[], forecast_lats=[], forecast_lons=[], lat_inc=1., lon_inc=1.,):
         """
         Initialize the analog object.
 
@@ -88,22 +87,12 @@ class Analog(object):
 
 
     def __repr__(self):
-        try:
-            self.forecast_lats
-        except:
-            pass
-        else:
             return "<Analog(grid_window={}, comp_method={}, field_weights={},lat_bounds={}, lon_bounds={}, forecast_lats={}, forecast_lons={}, lat_inc={}, lon_inc={})>".format(
                              self.grid_window,self.comp_method, self.field_weights, self.lat_bounds,
                              self.lon_bounds, self.forecast_lats, self.forecast_lons, self.lat_inc, self.lon_inc)
 
 
     def __str__(self):
-        try:
-            self.forecast_lats
-        except:
-            pass
-        else:
             return "Analog(grid_window={}, comp_method={}, field_weights={},lat_bounds={}, lon_bounds={}, forecast_lats={}, forecast_lons={}, lat_inc={}, lon_inc={})".format(
                              self.grid_window,self.comp_method, self.field_weights, self.lat_bounds,
                              self.lon_bounds, self.forecast_lats, self.forecast_lons, self.lat_inc, self.lon_inc)

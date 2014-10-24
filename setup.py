@@ -9,7 +9,7 @@ setup(
     name = "pyanalog",
     version = "0.1",
     author = "Francisco M. Alvarez, Ph.D.",
-    author_email = "franciscomalvarez@gmail.com",
+    author_email = "francisco.alvarez@noaa.gov",
     description = ("A module to quickly find meteorological analogs based "
                                    "on past forecast/reanalysis data."),
     license = "GNU",
