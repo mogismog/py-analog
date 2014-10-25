@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 
 import warnings
-
 from utils import find_nearest_idx
-from comp_funcs import *
+from comp_funcs import _rank_analog_grid,_rmse_analog_grid,_mae_analog_grid,argsort_analogs
 
 class Analog(object):
     """Various methods to produce a single deterministic/probabilistic forecast via analog method."""
