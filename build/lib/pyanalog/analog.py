@@ -147,40 +147,38 @@ class Analog(object):
 
 
         # --- Pre-generating analog indices array, this should be faster.
-        self.distances = np.ones(train.shape[0]) * -9999.9
+        analog_idxs = np.ones(train.shape[0]) * -9999.9
 
         # --- Now, let's find the closest analogs
         if n_vars == 1: # --- Only doing a single field
             if self.comp_method[0] == 'rank':
-                _rank_analog_grid(train,forecast,self.distances,self.start_lat_idx,self.stop_lat_idx,
+                _rank_analog_grid(train,forecast,analog_idxs,self.start_lat_idx,self.stop_lat_idx,
                                   self.start_lon_idx,self.stop_lon_idx, self.grid_window)
             elif self.comp_method[0] == 'rmse':
-                _rmse_analog_grid(self.train,self.forecast,self.distances,self.start_lat_idx,self.stop_lat_idx,
+                _rmse_analog_grid(self.train,self.forecast,analog_idxs,self.start_lat_idx,self.stop_lat_idx,
                                   self.start_lon_idx,self.stop_lon_idx, self.grid_window)
             elif self.comp_method[0] == 'mae':
-                _mae_analog_grid(self.train,self.forecast,self.distances,self.start_lat_idx,self.stop_lat_idx,
+                _mae_analog_grid(self.train,self.forecast,analog_idxs,self.start_lat_idx,self.stop_lat_idx,
                                   self.start_lon_idx,self.stop_lon_idx, self.grid_window)
-            self.total_distances = self.distances
         elif n_vars > 1:
             for meth, nvar in enumerate(self.comp_method):
                 if meth == 'rank':
-                    _rank_analog_grid(train[nvar,...],forecast[nvar,...],self.distances[nvar,...],self.start_lat_idx,self.stop_lat_idx,
+                    _rank_analog_grid(train[nvar,...],forecast[nvar,...],analog_idxs[nvar,...],self.start_lat_idx,self.stop_lat_idx,
                                       self.start_lon_idx,self.stop_lon_idx, self.grid_window)
                 elif meth == 'rmse':
-                    _rmse_analog_grid(train[nvar,...],forecast[nvar,...],self.distances[nvar,...],self.start_lat_idx,self.stop_lat_idx,
+                    _rmse_analog_grid(train[nvar,...],forecast[nvar,...],analog_idxs[nvar,...],self.start_lat_idx,self.stop_lat_idx,
                                       self.start_lon_idx,self.stop_lon_idx, self.grid_window)
                 elif meth == 'mae':
-                    _mae_analog_grid(train[nvar,...],forecast[nvar,...],self.distances[nvar,...],self.start_lat_idx,self.stop_lat_idx,
+                    _mae_analog_grid(train[nvar,...],forecast[nvar,...],analog_idxs[nvar,...],self.start_lat_idx,self.stop_lat_idx,
                                       self.start_lon_idx,self.stop_lon_idx, self.grid_window)
 
                 # --- Now, we add weights to the distances...
-                self.distances[nvar,...] *= self.field_weights[nvar]
+                analog_idxs[nvar,...] *= self.field_weights[nvar]
 
             # --- sum up distances along variable axis
-            self.total_distances = np.sum(self.distances,axis=0)
+            analog_idxs = np.sum(analog_idxs,axis=0)
 
         # --- now find indices of closest ranks
-        self.indices = argsort_analogs(self.total_distances,self.start_lat_idx,self.stop_lat_idx,
+        analog_idxs = argsort_analogs(analog_idxs,elf.start_lat_idx,self.stop_lat_idx,
                                       self.start_lon_idx,self.stop_lon_idx)
-
-        return self
+        return analog_idxs

@@ -2,8 +2,8 @@ import os
 from setuptools import setup
 
 
-def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+#def read(fname):
+#    return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(
     name = "pyanalog",
@@ -16,7 +16,7 @@ setup(
     keywords = "meteorology atmospheric sciences weather analogs",
     url = "https://github.com/mogismog/pyanalog",
     packages=['pyanalog'],
-    long_description=read('README'),
+    long_description='Stuff goes here later...',
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Topic :: Scientific/Engineering :: Atmospheric Science",
