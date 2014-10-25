@@ -2,6 +2,7 @@
 
 import warnings
 from utils import find_nearest_idx
+import numpy as np
 from comp_funcs import _rank_analog_grid,_rmse_analog_grid,_mae_analog_grid,argsort_analogs
 
 class Analog(object):
