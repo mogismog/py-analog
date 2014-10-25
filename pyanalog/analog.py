@@ -162,7 +162,7 @@ class Analog(object):
                                   self.start_lon_idx,self.stop_lon_idx, self.grid_window)
             self.total_distances = self.distances
         elif n_vars > 1:
-            for meth, nvar in enumerate(self.comp_method):
+            for nvar,meth in enumerate(self.comp_method):
                 if meth == 'rank':
                     _rank_analog_grid(train[nvar,...],forecast[nvar,...],self.distances[nvar,...],self.start_lat_idx,self.stop_lat_idx,
                                       self.start_lon_idx,self.stop_lon_idx, self.grid_window)
