@@ -3,7 +3,7 @@
 import warnings
 from utils import find_nearest_idx
 import numpy as np
-from comp_funcs import _rank_analog_grid,_rmse_analog_grid,_mae_analog_grid,argsort_analogs
+from comp_funcs import _rank_analog_grid,_rmse_analog_grid,_mae_analog_grid,argsort_analogs,interp_proba,gen_proba
 
 class Analog(object):
     """Various methods to produce a single deterministic/probabilistic forecast via analog method."""
@@ -147,8 +147,7 @@ class Analog(object):
 
 
         # --- Pre-generating analog indices array, this should be faster.
-        self.distances = np.ones(train.shape[0]) * -9999.9
-
+        self.distances = np.zeros(train.shape)
         # --- Now, let's find the closest analogs
         if n_vars == 1: # --- Only doing a single field
             if self.comp_method[0] == 'rank':
@@ -163,6 +162,7 @@ class Analog(object):
             self.total_distances = self.distances
         elif n_vars > 1:
             for nvar,meth in enumerate(self.comp_method):
+                print "Finding analogs for variable #{}: method {}".format(nvar+1,meth)
                 if meth == 'rank':
                     _rank_analog_grid(train[nvar,...],forecast[nvar,...],self.distances[nvar,...],self.start_lat_idx,self.stop_lat_idx,
                                       self.start_lon_idx,self.stop_lon_idx, self.grid_window)
@@ -184,3 +184,19 @@ class Analog(object):
                                       self.start_lon_idx,self.stop_lon_idx)
 
         return self
+
+
+    def gen_forecast(self,events,pct_samps,interp=False):
+        """
+        Function to generate probabilities for forecasts...
+
+        :param events:
+        :param interp:
+        :return proba:
+        """
+
+        if interp:
+            probs = interp_proba(self.distances,events,self.start_lat_idx,self.stop_lat_idx,self.start_lon_idx,self.stop_lon_idx,pct_samps)
+        if not interp:
+            probs = gen_proba(self.indices,events,self.start_lat_idx,self.stop_lat_idx,self.start_lon_idx,self.stop_lon_idx,pct_samps)
+        return probs

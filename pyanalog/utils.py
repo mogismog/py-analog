@@ -62,7 +62,7 @@ def get_1mo_dates(inyr, inmo, indate, byear, eyear):
     return fnlist
 
 
-def get_analog_dates(forecastDate,window,byear,eyear, all_dates=False, month_range=True,):
+def get_analog_dates(forecast_date, window, byear, eyear, all_dates=False, month_range=True,):
     """
  Very useful with netCDF4 files and py-netCDF.
 
@@ -73,10 +73,10 @@ def get_analog_dates(forecastDate,window,byear,eyear, all_dates=False, month_ran
  search for analogs/use in logistic regression/whatever.
 
 inputs:
- forecastDate - some datetime object of the forecast date
+ forecast_date - some datetime object of the forecast date
  window - range of dates in past years to search, e.g. 45 will find dates 45 days before/after indate\n
-    if month_range == True, this number represents the number of months before/after forecastDate.month,
-    so if window = 1 and forecastDate.month = April, will use data from March-May.
+    if month_range == True, this number represents the number of months before/after forecast_date.month,
+    so if window = 1 and forecast_date.month = April, will use data from March-May.
  byear - earliest year for potential dates (byear/1/1)
  eyear - latest year for potential dates (eyear/12/31)
 
@@ -98,117 +98,118 @@ Returns:
         xdate = datetime(byear,1,1)
 
         while xdate <= datetime(eyear,12,31):
-            if xdate.year != forecastDate.year: # --- cross validation
-                if np.abs((xdate-forecastDate).days) > 31: # --- more CV, don't want dates too close together
+            if xdate.year != forecast_date.year: # --- cross validation
+                if np.abs((xdate-forecast_date).days) > 31: # --- more CV, don't want dates too close together
 
                     fnlist.append(xdate)
             xdate += timedelta(days=1)
 
-        return fnlist
+    else:
+        if month_range:
+            print "here!"
+            try:
+                xdate = datetime(byear,forecast_date.month,forecast_date.day)
+            except ValueError:
+                # --- For leap year issues
+                xdate = datetime(byear,forecast_date.month,forecast_date.day-1)
 
-    if month_range:
-        try:
-            xdate = datetime(byear,forecastDate.month,forecastDate.date)
-        except ValueError:
-            # --- For leap year issues
-            xdate = datetime(byear,forecastDate.month,forecastDate.date-1)
-
-        while xdate < datetime(eyear+1,1,1):
-            #print xdate
-            if xdate.year == forecastDate.year:
-                try:
-                    xdate = datetime((xdate.year + 1),forecastDate.month,forecastDate.date)
-                except ValueError:
-                    xdate = datetime((xdate.year + 1),forecastDate.month,forecastDate.date-1)
-                continue
-            for datechange in reversed(xrange(0,100)):
-                if xdate.month > 1:
-                    tdelta = timedelta(days=datechange)
-                    analogdate = xdate - tdelta
-                    if analogdate.year < byear:
-                        continue
-                    if analogdate.year == forecastDate.year:
-                        continue
-                    if analogdate < datetime(xdate.year,xdate.month-1,1):
-                        continue
-                    fnlist.append(analogdate)
-                elif xdate.month == 1:
-                    tdelta = timedelta(days=datechange)
-                    analogdate = xdate - tdelta
-                    if analogdate.year < byear:
-                        continue
-                    if analogdate.year == forecastDate.year:
-                        continue
-                    if analogdate < datetime(xdate.year-1,12,1):
-                        continue
-                    fnlist.append(analogdate)
-            for datechange in xrange(1,101):
-                if xdate.month < 12:
-                    tdelta = timedelta(days=datechange)
-                    analogdate = xdate + tdelta
-                    if analogdate.year > eyear:
-                        continue
-                    if analogdate.year == forecastDate.year:
-                        continue
+            while xdate < datetime(eyear+1,1,1):
+                #print xdate
+                if xdate.year == forecast_date.year:
                     try:
-                        datetime(xdate.year,xdate.month+2,1)
-                    except ValueError: # --- xdate.month == 11
-                        if analogdate >= datetime(xdate.year+1,1,1):
+                        xdate = datetime((xdate.year + 1),forecast_date.month,forecast_date.day)
+                    except ValueError:
+                        xdate = datetime((xdate.year + 1),forecast_date.month,forecast_date.day-1)
+                    continue
+                for datechange in reversed(xrange(0,100)):
+                    if xdate.month > 1:
+                        tdelta = timedelta(days=datechange)
+                        analogdate = xdate - tdelta
+                        if analogdate.year < byear:
                             continue
-                    else:
-                        if analogdate >= datetime(xdate.year,xdate.month+2,1):
+                        if analogdate.year == forecast_date.year:
                             continue
+                        if analogdate < datetime(xdate.year,xdate.month-1,1):
+                            continue
+                        fnlist.append(analogdate)
+                    elif xdate.month == 1:
+                        tdelta = timedelta(days=datechange)
+                        analogdate = xdate - tdelta
+                        if analogdate.year < byear:
+                            continue
+                        if analogdate.year == forecast_date.year:
+                            continue
+                        if analogdate < datetime(xdate.year-1,12,1):
+                            continue
+                        fnlist.append(analogdate)
+                for datechange in xrange(1,101):
+                    if xdate.month < 12:
+                        tdelta = timedelta(days=datechange)
+                        analogdate = xdate + tdelta
+                        if analogdate.year > eyear:
+                            continue
+                        if analogdate.year == forecast_date.year:
+                            continue
+                        try:
+                            datetime(xdate.year,xdate.month+2,1)
+                        except ValueError: # --- xdate.month == 11
+                            if analogdate >= datetime(xdate.year+1,1,1):
+                                continue
+                        else:
+                            if analogdate >= datetime(xdate.year,xdate.month+2,1):
+                                continue
+                        fnlist.append(analogdate)
+                    elif xdate.month == 12:
+                        tdelta = timedelta(days=datechange)
+                        analogdate = xdate + tdelta
+                        if analogdate.year > eyear:
+                            continue
+                        if analogdate.year == forecast_date.year:
+                            continue
+                        if analogdate >= datetime(xdate.year+1,2,1):
+                            continue
+                        fnlist.append(analogdate)
+                try:
+                    xdate = datetime((xdate.year + 1),forecast_date.month,forecast_date.day)
+                except ValueError: # --- 2/29 on non-leap year issue
+                    xdate = datetime(xdate.year+1,forecast_date.month,forecast_date.day-1)
+
+        if not month_range:
+            try:
+                xdate = datetime(byear,forecast_date.month,forecast_date.date)
+            except ValueError:
+                # --- For leap year issues
+                xdate = datetime(byear,forecast_date.month,forecast_date.date-1)
+
+            while xdate < datetime(eyear+1,1,1):
+                #print xdate
+                if xdate.year == forecast_date.year:
+                    try:
+                        xdate = datetime((xdate.year + 1),forecast_date.month,forecast_date.date)
+                    except ValueError: # --- 2/29 on non-leap year issue
+                        xdate = datetime((xdate.year + 1),forecast_date.month,forecast_date.date-1)
+                    continue
+                for datechange in reversed(xrange(0,window+1)):
+                    tdelta = timedelta(days=datechange)
+                    analogdate = xdate - tdelta
+                    if analogdate.year < byear:
+                        continue
+                    if analogdate.year == forecast_date.year:
+                        continue
                     fnlist.append(analogdate)
-                elif xdate.month == 12:
+
+                for datechange in xrange(1,window):
                     tdelta = timedelta(days=datechange)
                     analogdate = xdate + tdelta
                     if analogdate.year > eyear:
                         continue
-                    if analogdate.year == forecastDate.year:
-                        continue
-                    if analogdate >= datetime(xdate.year+1,2,1):
+                    if analogdate.year == forecast_date.year:
                         continue
                     fnlist.append(analogdate)
-            try:
-                xdate = datetime((xdate.year + 1),forecastDate.month,forecastDate.date)
-            except ValueError: # --- 2/29 on non-leap year issue
-                xdate = datetime(xdate.year+1,forecastDate.month,forecastDate.date-1)
 
-    if not month_range:
-        try:
-            xdate = datetime(byear,forecastDate.month,forecastDate.date)
-        except ValueError:
-            # --- For leap year issues
-            xdate = datetime(byear,forecastDate.month,forecastDate.date-1)
-
-        while xdate < datetime(eyear+1,1,1):
-            #print xdate
-            if xdate.year == forecastDate.year:
                 try:
-                    xdate = datetime((xdate.year + 1),forecastDate.month,forecastDate.date)
+                    xdate = datetime((xdate.year + 1),forecast_date.month,forecast_date.date)
                 except ValueError: # --- 2/29 on non-leap year issue
-                    xdate = datetime((xdate.year + 1),forecastDate.month,forecastDate.date-1)
-                continue
-            for datechange in reversed(xrange(0,window+1)):
-                tdelta = timedelta(days=datechange)
-                analogdate = xdate - tdelta
-                if analogdate.year < byear:
-                    continue
-                if analogdate.year == forecastDate.year:
-                    continue
-                fnlist.append(analogdate)
+                    xdate = datetime(xdate.year+1,forecast_date.month,forecast_date.date-1)
 
-            for datechange in xrange(1,window):
-                tdelta = timedelta(days=datechange)
-                analogdate = xdate + tdelta
-                if analogdate.year > eyear:
-                    continue
-                if analogdate.year == forecastDate.year:
-                    continue
-                fnlist.append(analogdate)
-
-            try:
-                xdate = datetime((xdate.year + 1),forecastDate.month,forecastDate.date)
-            except ValueError: # --- 2/29 on non-leap year issue
-                xdate = datetime(xdate.year+1,forecastDate.month,forecastDate.date-1)
-
+    return fnlist
