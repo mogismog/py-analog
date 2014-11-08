@@ -1,9 +1,13 @@
-import os
-from setuptools import setup
+from distutils.core import setup
+from setuptools import find_packages
 
 
-#def read(fname):
-#    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+required = [
+    "numba>=0.15",
+    "numpy>=1.9",
+    "scipy>=0.14"
+]
+
 
 setup(
     name = "pyanalog",
@@ -15,7 +19,7 @@ setup(
     license = "GNU",
     keywords = "meteorology atmospheric sciences weather analogs",
     url = "https://github.com/mogismog/pyanalog",
-    packages=['pyanalog'],
+    packages=find_packages(),
     long_description='Stuff goes here later...',
     classifiers=[
         "Development Status :: 3 - Alpha",
