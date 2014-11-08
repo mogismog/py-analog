@@ -106,7 +106,6 @@ Returns:
 
     else:
         if month_range:
-            print "here!"
             try:
                 xdate = datetime(byear,forecast_date.month,forecast_date.day)
             except ValueError:

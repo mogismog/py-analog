@@ -162,7 +162,7 @@ class Analog(object):
             self.total_distances = self.distances
         elif n_vars > 1:
             for nvar,meth in enumerate(self.comp_method):
-                print "Finding analogs for variable #{}: method {}".format(nvar+1,meth)
+                #print "Finding analogs for variable #{}: method {}".format(nvar+1,meth)
                 if meth == 'rank':
                     _rank_analog_grid(train[nvar,...],forecast[nvar,...],self.distances[nvar,...],self.start_lat_idx,self.stop_lat_idx,
                                       self.start_lon_idx,self.stop_lon_idx, self.grid_window)
@@ -177,11 +177,11 @@ class Analog(object):
                 self.distances[nvar,...] *= self.field_weights[nvar]
 
             # --- sum up distances along variable axis
-            self.total_distances = np.sum(self.distances,axis=0)
+            #self.total_distances = np.sum(self.distances,axis=0)
 
         # --- now find indices of closest ranks
-        self.indices = argsort_analogs(self.total_distances,self.start_lat_idx,self.stop_lat_idx,
-                                      self.start_lon_idx,self.stop_lon_idx)
+        #self.indices = argsort_analogs(self.total_distances,self.start_lat_idx,self.stop_lat_idx,
+        #                              self.start_lon_idx,self.stop_lon_idx)
 
         return self
 
